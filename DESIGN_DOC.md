@@ -16,9 +16,9 @@ This doc shows how I'd architect it to be production-safe from day one, with an 
 
 ## 2. System Diagram
 
-![System Diagram](system-diagram.svg)
+![System Diagram](docs/architecture.svg)
 
-Source: [`system-diagram.d2`](system-diagram.d2)
+Source: [`docs/architecture.d2`](docs/architecture.d2)
 
 Every extracted field carries a confidence score. High-confidence fields flow straight to mapping. Anything below threshold drops into a human review queue before it ever reaches ProConnect or DrakeTax.
 
