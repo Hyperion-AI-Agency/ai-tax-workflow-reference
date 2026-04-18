@@ -19,7 +19,7 @@ catalogs:
     "std-env": ^3.0.0
     vitest: ^3.2.1
     "lodash.merge": ^4.6.2
-    "schema-dts": ^1.1.5
+    "schema-dts": ^2.0.0
     "resend": ^4.5.1
     "@react-email/components": 0.0.41
     "posthog-js": ^1.246.0
