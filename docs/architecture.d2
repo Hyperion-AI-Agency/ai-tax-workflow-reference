@@ -20,8 +20,8 @@ api: FastAPI Gateway {
 pipeline: "Extraction Pipeline" {
   style.bold: true
 
-  ocr: OCR Worker {
-    icon: https://cdn.simpleicons.org/celery
+  ocr: OCR Worker (Textract) {
+    icon: https://cdn.jsdelivr.net/npm/lucide-static@latest/icons/scan-text.svg
   }
   claude: Claude Extraction {
     icon: https://cdn.simpleicons.org/anthropic
@@ -42,28 +42,16 @@ data: "Data Layer" {
   }
 }
 
-external: "External Services" {
-  style.bold: true
-
-  textract: AWS Textract {
-    icon: https://cdn.jsdelivr.net/npm/lucide-static@latest/icons/scan-text.svg
-  }
-  claude_api: Anthropic Claude {
-    icon: https://cdn.simpleicons.org/anthropic
-  }
-  target: "ProConnect / DrakeTax" {
-    icon: https://cdn.jsdelivr.net/npm/lucide-static@latest/icons/file-text.svg
-  }
+target: "ProConnect / DrakeTax" {
+  icon: https://cdn.jsdelivr.net/npm/lucide-static@latest/icons/file-text.svg
 }
 
 cpa -> web: "Upload return"
 web -> api
 api -> data.s3: "Encrypted upload"
 api -> pipeline.ocr: "Enqueue"
-pipeline.ocr -> external.textract
 pipeline.ocr -> pipeline.claude
-pipeline.claude -> external.claude_api
 pipeline.claude -> pipeline.review: "Low confidence"
 pipeline.claude -> data.db: "High confidence"
 pipeline.review -> data.db: "After review"
-data.db -> external.target: "Export"
+data.db -> target: "Export"
