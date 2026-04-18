@@ -1,0 +1,85 @@
+# AI Tax Workflow - Sequence Diagram
+# Render: d2 --theme 200 --layout dagre docs/flow.d2 docs/flow.svg
+#
+# Dynamic view of a single tax return moving through the system.
+# Shows both the happy path (80% of returns) and the review path (~20%).
+# For the structural view, see architecture.d2.
+
+title: AI Tax Workflow - Return Processing Flow {
+  near: top-center
+  shape: text
+  style.font-size: 28
+  style.bold: true
+}
+
+shape: sequence_diagram
+
+cpa: CPA
+web: Upload Portal
+api: FastAPI Gateway
+s3: Encrypted S3
+queue: Redis Queue
+ocr: OCR Worker
+textract: AWS Textract
+extract: Extraction Worker
+claude: Claude API
+db: Postgres
+review_ui: Review UI
+mapper: Mapping Worker
+target: "ProConnect /\nDrakeTax"
+
+# --- Happy Path: Upload ---
+cpa -> web: "1. Select tax return PDF"
+web -> api: "2. POST /uploads\n(request signed URL)"
+api -> s3: "3. Generate signed URL"
+api -> web: "4. Return signed URL"
+web -> s3: "5. Upload encrypted PDF"
+s3 -> api: "6. ObjectCreated event"
+api -> queue: "7. Enqueue OCR job"
+api -> cpa: "8. \"Processing...\"" {
+  style.stroke: "#059669"
+}
+
+# --- OCR Step ---
+queue -> ocr: "9. Dequeue OCR job"
+ocr -> textract: "10. Extract text + layout"
+textract -> ocr: "11. Structured OCR result"
+ocr -> s3: "12. Store raw parse"
+ocr -> queue: "13. Enqueue extraction"
+
+# --- Extraction Step ---
+queue -> extract: "14. Dequeue extraction"
+extract -> extract: "15. Redact PII\n(SSN, ITIN)"
+extract -> claude: "16. Extract fields\n(with confidence scores)"
+claude -> extract: "17. Structured JSON\n+ per-field confidence"
+extract -> db: "18. Persist all fields"
+
+# --- Confidence Branch ---
+extract -> review_ui: "19a. Low-confidence fields" {
+  style.stroke: "#d97706"
+  style.stroke-dash: 3
+}
+extract -> queue: "19b. All-high-confidence" {
+  style.stroke: "#059669"
+}
+
+# --- Review Path (only for low-confidence returns) ---
+cpa -> review_ui: "20. Open review queue"
+review_ui -> cpa: "21. Show doc + extracted value"
+cpa -> review_ui: "22. Approve or correct"
+review_ui -> db: "23. Persist correction\n(append-only)"
+review_ui -> queue: "24. Enqueue mapping"
+
+# --- Mapping + Export ---
+queue -> mapper: "25. Dequeue mapping"
+mapper -> db: "26. Load verified fields"
+mapper -> mapper: "27. Map to target format\n(ProConnect or DrakeTax)"
+mapper -> target: "28. Export return" {
+  style.stroke: "#059669"
+  style.bold: true
+}
+target -> mapper: "29. Return import ID"
+mapper -> db: "30. Mark return as exported"
+mapper -> cpa: "31. Notify: \"Ready in ProConnect\"" {
+  style.stroke: "#059669"
+}

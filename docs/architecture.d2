@@ -1,0 +1,163 @@
+# AI Tax Workflow - System Architecture (Layered)
+# Render: d2 --theme 200 --layout elk docs/architecture.d2 docs/architecture.svg
+#
+# IBM-style layered architecture showing the structural view of the system.
+# For the dynamic view (how a return flows through the system), see flow.d2.
+
+direction: down
+
+title: AI Tax Workflow - System Architecture {
+  near: top-center
+  shape: text
+  style.font-size: 28
+  style.bold: true
+}
+
+# --- Layer 1: Actors ---
+actors: {
+  label: "Users & Actors"
+  style.stroke: "#334155"
+  style.fill: "#f1f5f9"
+  style.bold: true
+
+  cpa: "CPA User\n(Uploads returns, reviews flagged fields)" {
+    shape: person
+  }
+  admin: "Firm Admin\n(Monitors queue, audits trails)" {
+    shape: person
+  }
+}
+
+# --- Layer 2: Presentation ---
+presentation: {
+  label: "Presentation Layer  -  Next.js 15"
+  style.stroke: "#1d4ed8"
+  style.fill: "#dbeafe"
+  style.bold: true
+  grid-columns: 3
+  grid-gap: 40
+
+  upload: "Upload Portal\nSigned URLs, drag & drop"
+  review: "Review Queue UI\nLow-confidence field inspector"
+  admin_ui: "Admin Dashboard\nQueue depth, audit trails"
+}
+
+# --- Layer 3: API Gateway ---
+gateway: {
+  label: "API Gateway Layer  -  FastAPI"
+  style.stroke: "#7c3aed"
+  style.fill: "#ede9fe"
+  style.bold: true
+  grid-columns: 3
+  grid-gap: 40
+
+  api: "REST API\nOpenAPI + Pydantic"
+  auth: "Auth Middleware\nJWT + role-based access"
+  audit_mw: "Audit Middleware\nLogs every mutation"
+}
+
+# --- Layer 4: Extraction Pipeline ---
+pipeline: {
+  label: "Extraction Pipeline  -  Celery Workers"
+  style.stroke: "#d97706"
+  style.fill: "#fef3c7"
+  style.bold: true
+  grid-columns: 4
+  grid-gap: 30
+
+  ingest: "Ingest Service\nValidate, store, enqueue"
+  ocr_worker: "OCR Worker\nTextract orchestration"
+  extract_worker: "Extraction Worker\nClaude + confidence scoring"
+  map_worker: "Mapping Worker\nPer-target format mappers"
+}
+
+# --- Layer 5: Data ---
+data: {
+  label: "Data Layer"
+  style.stroke: "#059669"
+  style.fill: "#d1fae5"
+  style.bold: true
+  grid-columns: 4
+  grid-gap: 40
+
+  s3: "Encrypted S3\nKMS + signed URLs" {
+    shape: cylinder
+  }
+  db: "Postgres\nReview state, fields, users" {
+    shape: cylinder
+  }
+  audit_log: "Immutable Audit Log\nAppend-only S3" {
+    shape: cylinder
+  }
+  redis: "Redis\nCelery broker + cache" {
+    shape: cylinder
+  }
+}
+
+# --- Layer 6: External ---
+external: {
+  label: "External Services"
+  style.stroke: "#be185d"
+  style.fill: "#fce7f3"
+  style.bold: true
+  grid-columns: 5
+  grid-gap: 30
+
+  textract: "AWS Textract\nOCR on tax docs" {
+    shape: cloud
+  }
+  claude: "Anthropic Claude\nZero-retention API" {
+    shape: cloud
+  }
+  proconnect: "Intuit ProConnect\nTax return API" {
+    shape: cloud
+  }
+  draketax: "DrakeTax\nTax return API" {
+    shape: cloud
+  }
+  sentry: "Sentry\nError tracking" {
+    shape: cloud
+  }
+}
+
+# --- Connections (top-to-bottom data flow) ---
+
+# Actors -> Presentation
+actors.cpa -> presentation.upload
+actors.cpa -> presentation.review
+actors.admin -> presentation.admin_ui
+
+# Presentation -> Gateway
+presentation.upload -> gateway.api: "HTTPS"
+presentation.review -> gateway.api: "HTTPS"
+presentation.admin_ui -> gateway.api: "HTTPS"
+
+# Gateway internal
+gateway.api -> gateway.auth
+gateway.api -> gateway.audit_mw
+
+# Gateway -> Pipeline
+gateway.api -> pipeline.ingest: "Upload job"
+
+# Pipeline internal flow
+pipeline.ingest -> data.s3: "Encrypted PDF"
+pipeline.ingest -> data.redis: "Enqueue"
+data.redis -> pipeline.ocr_worker
+pipeline.ocr_worker -> external.textract: "Extract"
+pipeline.ocr_worker -> data.redis: "Enqueue"
+data.redis -> pipeline.extract_worker
+pipeline.extract_worker -> external.claude: "Structured extraction"
+pipeline.extract_worker -> data.db: "Persist fields"
+pipeline.extract_worker -> data.redis: "Enqueue"
+data.redis -> pipeline.map_worker
+pipeline.map_worker -> external.proconnect
+pipeline.map_worker -> external.draketax
+
+# Cross-cutting
+gateway.audit_mw -> data.audit_log
+gateway.api -> external.sentry: "Errors" {
+  style.stroke-dash: 3
+}
+pipeline.extract_worker -> external.sentry: "Errors" {
+  style.stroke-dash: 3
+}
