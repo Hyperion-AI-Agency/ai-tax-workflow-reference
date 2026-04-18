@@ -1,35 +1,55 @@
 # AI Tax System - Architecture
-# Render: d2 --theme 303 --sketch --pad 120 --scale 1.5 --layout elk
+# Render: d2 --theme 0 --pad 120 --scale 1.5 --layout elk docs/architecture.d2 docs/architecture.svg
+
+vars: {
+  d2-config: {
+    theme-id: 0
+  }
+}
 
 direction: right
 grid-columns: 2
-grid-gap: 80
+grid-gap: 60
 
 classes: {
   card: {
     width: 160
     height: 160
+    style.font-size: 14
+  }
+  zone: {
+    style.fill: "#f8fafc"
+    style.stroke: "#cbd5e1"
+    style.stroke-width: 2
+    style.border-radius: 12
+    style.shadow: true
+    style.font-size: 13
+    style.bold: true
   }
 }
 
-cpa: CPA User {
-  class: card
-  icon: https://cdn.jsdelivr.net/npm/lucide-static@latest/icons/user-round.svg
+client_zone: "Client" {
+  class: zone
+  style.fill: "#f0f9ff"
+
+  cpa: CPA User {
+    class: card
+    icon: https://cdn.jsdelivr.net/npm/lucide-static@latest/icons/user-round.svg
+  }
+  web: Next.js Upload {
+    class: card
+    icon: https://cdn.simpleicons.org/nextdotjs
+  }
 }
 
-web: Next.js Frontend {
-  class: card
-  icon: https://cdn.simpleicons.org/nextdotjs
-}
+backend_zone: "Extraction Pipeline" {
+  class: zone
+  style.fill: "#eef2ff"
 
-api: FastAPI Gateway {
-  class: card
-  icon: https://cdn.simpleicons.org/fastapi
-}
-
-pipeline: "Extraction Pipeline" {
-  style.bold: true
-
+  api: FastAPI Gateway {
+    class: card
+    icon: https://cdn.simpleicons.org/fastapi
+  }
   ocr: OCR Worker {
     class: card
     icon: https://cdn.jsdelivr.net/npm/lucide-static@latest/icons/scan-text.svg
@@ -44,22 +64,36 @@ pipeline: "Extraction Pipeline" {
   }
 }
 
-db: Postgres {
-  class: card
-  icon: https://cdn.simpleicons.org/postgresql
+data_zone: "Data" {
+  class: zone
+  style.fill: "#ecfdf5"
+
+  db: Postgres {
+    class: card
+    icon: https://cdn.simpleicons.org/postgresql
+  }
+  storage: S3 (KMS) {
+    class: card
+    icon: https://icons.terrastruct.com/aws%2FStorage%2FAmazon-Simple-Storage-Service-S3.svg
+  }
 }
 
-target: "ProConnect / DrakeTax" {
-  class: card
-  icon: https://cdn.jsdelivr.net/npm/lucide-static@latest/icons/file-text.svg
+external_zone: "Target Systems" {
+  class: zone
+  style.fill: "#fef3c7"
+
+  target: ProConnect / DrakeTax {
+    class: card
+    icon: https://cdn.jsdelivr.net/npm/lucide-static@latest/icons/file-text.svg
+  }
 }
 
-cpa -> web: "1. Upload return"
-web -> api: "2. POST /returns"
-api -> pipeline.ocr: "3. Enqueue OCR"
-pipeline.ocr -> pipeline.claude: "4. Extract fields"
-pipeline.claude -> pipeline.review: "5a. Low confidence"
-pipeline.claude -> db: "5b. High confidence"
-pipeline.review -> db: "6. After review"
-api -> db: "7. Read verified"
-api -> target: "8. Export"
+client_zone.cpa -> client_zone.web: "1. Upload return"
+client_zone.web -> backend_zone.api: "2. POST /returns"
+backend_zone.api -> data_zone.storage: "3. Store encrypted"
+backend_zone.api -> backend_zone.ocr: "4. Enqueue OCR"
+backend_zone.ocr -> backend_zone.claude: "5. Extract fields"
+backend_zone.claude -> backend_zone.review: "6a. Low confidence"
+backend_zone.claude -> data_zone.db: "6b. High confidence"
+backend_zone.review -> data_zone.db: "7. After CPA review"
+backend_zone.api -> external_zone.target: "8. Export"

@@ -1,5 +1,11 @@
 # AI Tax System - Processing Flow
-# Render: d2 --theme 303 --sketch --pad 120 --scale 1.5 --layout dagre
+# Render: d2 --theme 0 --pad 120 --scale 1.5 --layout dagre docs/flow.d2 docs/flow.svg
+
+vars: {
+  d2-config: {
+    theme-id: 0
+  }
+}
 
 shape: sequence_diagram
 
@@ -26,8 +32,9 @@ cpa -> api: "1. Upload tax return"
 api -> ocr: "2. Enqueue OCR"
 ocr -> claude: "3. Extract fields"
 claude -> db: "4. Persist with confidence scores"
-db -> target: "5. Export verified fields" {
+db -> api: "5. Read verified fields"
+api -> target: "6. Export verified" {
   style.stroke: "#059669"
   style.bold: true
 }
-target -> cpa: "6. Import confirmed"
+target -> cpa: "7. Import confirmed"
