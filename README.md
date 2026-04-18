@@ -1,34 +1,44 @@
-# AI Tax Workflow - Reference Architecture
+<div align="center">
 
-Reference architecture for AI-powered tax return processing. Demonstrates a production-safe pattern for extracting structured data from uploaded tax documents (1099s, 1040s, K-1s, Schedule C) and handing off to Intuit ProConnect or DrakeTax.
+# AI Tax System
 
-Built by [Vitalijus Alsauskas / HyperionAI](https://www.linkedin.com/in/vitalijus-hyperion/) as a public reference for CPA firms considering AI document pipelines.
+### AI-powered tax return processing for CPA firms. OCR, Claude extraction, confidence-gated review, ProConnect and DrakeTax export.
+
+![License](https://img.shields.io/badge/license-MIT-3b82f6)
+![Built by HyperionAI](https://img.shields.io/badge/built_by-HyperionAI-0f172a)
+![Stack](https://img.shields.io/badge/stack-Next.js_·_FastAPI_·_Claude-64748b)
+
+[View Design Doc (PDF)](DESIGN_DOC.pdf) · [Architecture](docs/architecture.md) · [Implementation Plan](IMPLEMENTATION_PLAN.md)
 
 ---
+
+![Architecture](docs/architecture.svg)
+
+</div>
+
+## What this is
+
+A production-safe pattern for extracting structured data from uploaded tax documents (1099s, 1040s, K-1s, Schedule C) and handing off to Intuit ProConnect or DrakeTax.
+
+Most AI tax workflows ship as impressive demos and fall apart on the first scanned 1099 or handwritten return. This reference shows the pattern that survives real documents: OCR before LLM, per-field confidence scoring, human review queue for anything below threshold, and PII redaction before any prompt touches Claude.
 
 ## Why this exists
 
-Most AI document workflows ship as impressive demos and then fall apart on the first scanned 1099 or handwritten return. This reference shows the pattern that survives real documents:
-
-1. **OCR before LLM** - pre-parse the document structure instead of dumping raw pixels into an LLM
-2. **Confidence scoring per field** - every extracted value carries a score; nothing auto-exports below the threshold
-3. **Human review queue** - low-confidence fields route to a CPA for verification before anything reaches ProConnect
-4. **PII redaction before prompts** - SSNs and ITINs are tokenised before ever hitting the LLM
-5. **Append-only audit trail** - every mutation logged immutably for compliance
-
----
+- **OCR before LLM** - pre-parse document structure rather than dumping pixels into an LLM
+- **Confidence scoring per field** - every extracted value carries a score; nothing auto-exports below threshold
+- **Human review queue** - low-confidence fields route to a CPA before anything reaches ProConnect
+- **PII redaction before prompts** - SSNs and ITINs tokenised before hitting the LLM
+- **Append-only audit trail** - every mutation logged immutably for compliance
 
 ## Documentation
 
-| Document | Purpose |
-|----------|---------|
-| [docs/architecture.md](docs/architecture.md) | Layered architecture + component responsibilities |
-| [docs/architecture.svg](docs/architecture.svg) | Architecture diagram (rendered) |
-| [docs/flow.svg](docs/flow.svg) | Sequence diagram showing end-to-end return processing |
-| [IMPLEMENTATION_PLAN.md](IMPLEMENTATION_PLAN.md) | Phase-by-phase build plan with milestones and risks |
-| [CLAUDE.md](CLAUDE.md) | Operational rules for Claude Code working in this codebase |
+**[Design Doc (PDF)](DESIGN_DOC.pdf)** — Branded system design with diagrams, tool choices, phases, and risks.
 
----
+**[Architecture](docs/architecture.md)** — Layered view with component responsibilities and design decisions.
+
+**[Implementation Plan](IMPLEMENTATION_PLAN.md)** — 3-phase build plan with milestones and risks.
+
+**[Flow Diagram](docs/flow.svg)** — Sequence diagram of the happy path.
 
 ## Stack
 
@@ -43,9 +53,7 @@ Most AI document workflows ship as impressive demos and then fall apart on the f
 | LLM | Anthropic Claude 3.5 Sonnet (zero-retention) |
 | Target Systems | Intuit ProConnect / DrakeTax |
 
----
-
-## Quick Start (local dev)
+## Quick Start
 
 ```bash
 pnpm install
@@ -54,11 +62,9 @@ cd apps/api && poetry install && poetry run alembic upgrade head && cd ../..
 pnpm dev
 ```
 
----
-
 ## Who this is for
 
-**CPA firm owners** evaluating AI-powered tax workflow vendors - use this as a reference to understand what a production-ready pipeline looks like before committing.
+**CPA firm owners** evaluating AI tax workflow vendors - use this to understand what a production-ready pipeline looks like before committing.
 
 **Developers hired to build one** - fork this repo as a starting point. Everything a production tax workflow needs is here in skeleton form.
 
@@ -66,14 +72,35 @@ pnpm dev
 
 ---
 
-## About
+<div align="center">
 
-Built by Vitalijus Alsauskas. Ex-IBM (4 years, Fortune 500 clients including AskProcurement, a chatbot pulling structured Dun & Bradstreet data for procurement teams). Currently running Claude in production on Fit7D and shipping AI features on Adboard (Next.js + Supabase + Claude API).
+## About the author
 
-If you are a CPA firm considering this pattern, I offer a free 30-minute scoping call - reach out via LinkedIn or [vitalijus.io](https://vitalijus.io).
+<img src="https://hyperionai.dev/founder.png" width="120" style="border-radius:50%" alt="Vitalijus Alsauskas" />
 
-- GitHub: https://github.com/Vitals9367
-- LinkedIn: https://www.linkedin.com/in/vitalijus-hyperion/
+### Vitalijus Alsauskas
+
+Founder, HyperionAI
+
+[LinkedIn](https://www.linkedin.com/in/vitalijus-hyperion/) · [GitHub](https://github.com/Vitals9367) · [hyperionai.dev](https://hyperionai.dev)
+
+</div>
+
+4 years at IBM on Fortune 500 systems, including AskProcurement (chatbot integrating Dun & Bradstreet data for procurement teams). Now building production AI systems for founders and agencies. Currently running Claude in production on Fit7D (FastAPI + Claude dialogue platform) and Adboard (Next.js + Supabase + Claude API with OAuth into Meta, Google, Shopify).
+
+---
+
+<div align="center">
+
+## Interested in building something like this?
+
+I offer a free 30-minute scoping call for teams considering this pattern.
+
+### [Book a call](https://cal.com/vitalijus-alsauskas/project-request?overlayCalendar=true)
+
+or reach out via [LinkedIn](https://www.linkedin.com/in/vitalijus-hyperion/)
+
+</div>
 
 ---
 
