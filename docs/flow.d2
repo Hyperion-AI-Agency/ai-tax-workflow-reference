@@ -9,27 +9,25 @@ cpa: CPA {
 api: FastAPI {
   icon: https://cdn.simpleicons.org/fastapi
 }
-storage: S3 + Queue {
-  icon: https://icons.terrastruct.com/aws%2FStorage%2FAmazon-Simple-Storage-Service-S3.svg
-}
 ocr: OCR Worker {
-  icon: https://cdn.simpleicons.org/celery
+  icon: https://cdn.jsdelivr.net/npm/lucide-static@latest/icons/scan-text.svg
 }
 claude: Claude {
   icon: https://cdn.simpleicons.org/anthropic
 }
-target: "ProConnect /\nDrakeTax" {
+db: Postgres {
+  icon: https://cdn.simpleicons.org/postgresql
+}
+target: ProConnect / DrakeTax {
   icon: https://cdn.jsdelivr.net/npm/lucide-static@latest/icons/file-text.svg
 }
 
 cpa -> api: "1. Upload tax return"
-api -> storage: "2. Encrypted store + enqueue"
-storage -> ocr: "3. Dequeue"
-ocr -> ocr: "4. Textract OCR"
-ocr -> claude: "5. Extract fields + confidence"
-claude -> storage: "6. Persist verified fields"
-storage -> target: "7. Export ready-to-file" {
+api -> ocr: "2. Enqueue OCR"
+ocr -> claude: "3. Extract fields"
+claude -> db: "4. Persist with confidence scores"
+db -> target: "5. Export verified fields" {
   style.stroke: "#059669"
   style.bold: true
 }
-target -> cpa: "8. Import confirmed"
+target -> cpa: "6. Import confirmed"
