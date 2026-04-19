@@ -28,6 +28,8 @@ classes: {
   }
 }
 
+# Row 0: user | app | (empty spacer)
+# Row 1: data | extraction | integrations
 user_slot: "" {
   style.fill: transparent
   style.stroke: transparent
@@ -50,6 +52,11 @@ app_zone: "App" {
     class: card
     icon: https://cdn.simpleicons.org/fastapi
   }
+}
+
+spacer_1: "" {
+  style.fill: transparent
+  style.stroke: transparent
 }
 
 data_zone: "Data" {
@@ -98,8 +105,6 @@ integrations_zone: "3rd Party Integrations" {
   }
 }
 
-# FastAPI is the orchestrator: writes to data, reads from data, exports to integrations.
-# Extraction workers pull from data, write back to data.
 user_slot.cpa -> app_zone.web: "1. Upload"
 app_zone.web -> app_zone.api: "2. POST /returns"
 app_zone.api -> data_zone.storage: "3. Store file"
