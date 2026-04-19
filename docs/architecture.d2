@@ -1,5 +1,5 @@
-# AI Tax System - Architecture
-# Render: d2 --theme 0 --sketch --pad 80 --scale 1.0 --layout elk docs/architecture.d2 docs/architecture.svg
+# AI Tax System - Architecture (generated from freebie.diagram spec)
+# Render: d2 --theme 0 --sketch --pad 80 --scale 1.0 --layout elk ... docs/architecture.d2 docs/architecture.svg
 
 vars: {
   d2-config: {
@@ -32,15 +32,12 @@ classes: {
   }
 }
 
-# 3x3 hub-and-spoke layout. app_zone at dead center [1,1].
-# Row 0: _       | user    | _
-# Row 1: data    | app     | integrations
-# Row 2: _       | extract | _
+# --- Row 0: spacer | entry | spacer-or-observability ---
 
 spacer_tl: "" { class: hidden }
 
-user_slot: "" { class: hidden
-  cpa: CPA User {
+entry_slot: "" { class: hidden
+  entry: CPA User {
     class: card
     icon: https://cdn.jsdelivr.net/npm/lucide-static@latest/icons/user-round.svg
   }
@@ -48,10 +45,11 @@ user_slot: "" { class: hidden
 
 spacer_tr: "" { class: hidden }
 
+# --- Row 1: data | app | integrations ---
+
 data_zone: "Data" {
   grid-columns: 2
   grid-gap: 80
-
   db: Postgres {
     class: card
     icon: https://cdn.simpleicons.org/postgresql
@@ -65,7 +63,6 @@ data_zone: "Data" {
 app_zone: "App" {
   grid-columns: 2
   grid-gap: 80
-
   web: Next.js Frontend {
     class: card
     icon: https://cdn.simpleicons.org/nextdotjs
@@ -79,7 +76,6 @@ app_zone: "App" {
 integrations_zone: "3rd Party Integrations" {
   grid-columns: 3
   grid-gap: 80
-
   claude: Claude API {
     class: card
     icon: https://cdn.simpleicons.org/anthropic
@@ -94,12 +90,13 @@ integrations_zone: "3rd Party Integrations" {
   }
 }
 
+# --- Row 2: spacer | processing | spacer ---
+
 spacer_bl: "" { class: hidden }
 
-extraction_zone: "Extraction Pipeline" {
+processing_zone: "Extraction Pipeline" {
   grid-columns: 3
   grid-gap: 80
-
   ocr: OCR Worker {
     class: card
     icon: https://cdn.jsdelivr.net/npm/lucide-static@latest/icons/scan-text.svg
@@ -116,16 +113,17 @@ extraction_zone: "Extraction Pipeline" {
 
 spacer_br: "" { class: hidden }
 
-user_slot.cpa -> app_zone.web: "1. Upload"
+# --- Arrows ---
+entry_slot.entry -> app_zone.web: "1. Upload"
 app_zone.web -> app_zone.api: "2. POST /returns"
 app_zone.api -> data_zone.storage: "3. Store file"
 app_zone.api -> data_zone.db: "4. Create job"
-data_zone.db -> extraction_zone.ocr: "5. Dequeue"
-extraction_zone.ocr -> extraction_zone.extractor: "6. OCR text"
-extraction_zone.extractor -> extraction_zone.review: "7. Low-confidence"
-extraction_zone -> data_zone.db: "8. Persist verified"
+data_zone.db -> processing_zone.ocr: "5. Dequeue"
+processing_zone.ocr -> processing_zone.extractor: "6. OCR text"
+processing_zone.extractor -> processing_zone.review: "7. Low-confidence"
+processing_zone -> data_zone.db: "8. Persist verified"
 app_zone.api -> integrations_zone.proconnect: "9a. Export"
 app_zone.api -> integrations_zone.draketax: "9b. Export"
-extraction_zone.extractor -> integrations_zone.claude: "LLM call" {
+processing_zone.extractor -> integrations_zone.claude: "LLM call" {
   style.stroke-dash: 3
 }

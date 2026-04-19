@@ -1,5 +1,5 @@
-# AI Tax System - Processing Flow
-# Render: d2 --theme 0 --pad 120 --scale 1.5 --layout dagre docs/flow.d2 docs/flow.svg
+# AI Tax System - Flow (generated from freebie.diagram spec)
+# Render: d2 --theme 0 --sketch --pad 80 --scale 1.0 --layout dagre ... docs/flow.d2 docs/flow.svg
 
 vars: {
   d2-config: {
@@ -9,32 +9,35 @@ vars: {
 
 shape: sequence_diagram
 
+# --- Participants ---
 cpa: CPA {
   icon: https://cdn.jsdelivr.net/npm/lucide-static@latest/icons/user-round.svg
 }
-api: FastAPI {
+frontend: Next.js Frontend {
+  icon: https://cdn.simpleicons.org/nextdotjs
+}
+backend: FastAPI Backend {
   icon: https://cdn.simpleicons.org/fastapi
-}
-ocr: OCR Worker {
-  icon: https://cdn.jsdelivr.net/npm/lucide-static@latest/icons/scan-text.svg
-}
-claude: Claude {
-  icon: https://cdn.simpleicons.org/anthropic
 }
 db: Postgres {
   icon: https://cdn.simpleicons.org/postgresql
 }
-target: ProConnect / DrakeTax {
+claude: Claude API {
+  icon: https://cdn.simpleicons.org/anthropic
+}
+target: ProConnect {
   icon: https://cdn.jsdelivr.net/npm/lucide-static@latest/icons/file-text.svg
 }
 
-cpa -> api: "1. Upload tax return"
-api -> ocr: "2. Enqueue OCR"
-ocr -> claude: "3. Extract fields"
-claude -> db: "4. Persist with confidence scores"
-db -> api: "5. Read verified fields"
-api -> target: "6. Export verified" {
+# --- Messages ---
+cpa -> frontend: "1. Upload return"
+frontend -> backend: "2. POST /returns"
+backend -> db: "3. Create job (pending)"
+backend -> claude: "4. Extract fields"
+claude -> backend: "5. Structured JSON + confidence"
+backend -> db: "6. Persist verified"
+backend -> target: "7. Export" {
   style.stroke: "#059669"
   style.bold: true
 }
-target -> cpa: "7. Import confirmed"
+target -> cpa: "8. Import confirmed"
