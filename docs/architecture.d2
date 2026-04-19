@@ -26,17 +26,39 @@ classes: {
     style.font-size: 13
     style.bold: true
   }
+  hidden: {
+    style.fill: transparent
+    style.stroke: transparent
+  }
 }
 
-# Row 0: user | app | (empty spacer)
-# Row 1: data | extraction | integrations
-user_slot: "" {
-  style.fill: transparent
-  style.stroke: transparent
+# 3x3 hub-and-spoke layout. app_zone at dead center [1,1].
+# Row 0: _       | user    | _
+# Row 1: data    | app     | integrations
+# Row 2: _       | extract | _
 
+spacer_tl: "" { class: hidden }
+
+user_slot: "" { class: hidden
   cpa: CPA User {
     class: card
     icon: https://cdn.jsdelivr.net/npm/lucide-static@latest/icons/user-round.svg
+  }
+}
+
+spacer_tr: "" { class: hidden }
+
+data_zone: "Data" {
+  grid-columns: 2
+  grid-gap: 30
+
+  db: Postgres {
+    class: card
+    icon: https://cdn.simpleicons.org/postgresql
+  }
+  storage: S3 (KMS) {
+    class: card
+    icon: https://icons.terrastruct.com/aws%2FStorage%2FAmazon-Simple-Storage-Service-S3.svg
   }
 }
 
@@ -54,24 +76,21 @@ app_zone: "App" {
   }
 }
 
-spacer_1: "" {
-  style.fill: transparent
-  style.stroke: transparent
-}
-
-data_zone: "Data" {
+integrations_zone: "3rd Party Integrations" {
   grid-columns: 2
   grid-gap: 30
 
-  db: Postgres {
+  claude: Claude API {
     class: card
-    icon: https://cdn.simpleicons.org/postgresql
+    icon: https://cdn.simpleicons.org/anthropic
   }
-  storage: S3 (KMS) {
+  target: ProConnect / DrakeTax {
     class: card
-    icon: https://icons.terrastruct.com/aws%2FStorage%2FAmazon-Simple-Storage-Service-S3.svg
+    icon: https://cdn.jsdelivr.net/npm/lucide-static@latest/icons/file-text.svg
   }
 }
+
+spacer_bl: "" { class: hidden }
 
 extraction_zone: "Extraction Pipeline" {
   grid-columns: 3
@@ -91,19 +110,7 @@ extraction_zone: "Extraction Pipeline" {
   }
 }
 
-integrations_zone: "3rd Party Integrations" {
-  grid-columns: 2
-  grid-gap: 30
-
-  claude: Claude API {
-    class: card
-    icon: https://cdn.simpleicons.org/anthropic
-  }
-  target: ProConnect / DrakeTax {
-    class: card
-    icon: https://cdn.jsdelivr.net/npm/lucide-static@latest/icons/file-text.svg
-  }
-}
+spacer_br: "" { class: hidden }
 
 user_slot.cpa -> app_zone.web: "1. Upload"
 app_zone.web -> app_zone.api: "2. POST /returns"
