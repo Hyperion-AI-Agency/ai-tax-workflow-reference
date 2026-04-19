@@ -9,7 +9,7 @@ vars: {
 
 direction: right
 grid-columns: 3
-grid-gap: 60
+grid-gap: 120
 
 classes: {
   card: {
@@ -28,7 +28,7 @@ classes: {
   }
 }
 
-# Order controls grid position. app_zone at position 1 = top-center.
+# L-to-R flow across 2 rows. app_zone is position [0,1] = top-center.
 cpa: CPA User {
   class: card
   icon: https://cdn.jsdelivr.net/npm/lucide-static@latest/icons/user-round.svg
@@ -36,7 +36,7 @@ cpa: CPA User {
 
 app_zone: "App" {
   grid-columns: 2
-  grid-gap: 30
+  grid-gap: 80
 
   web: Next.js Upload {
     class: card
@@ -50,7 +50,7 @@ app_zone: "App" {
 
 extraction_zone: "Extraction Pipeline" {
   grid-columns: 3
-  grid-gap: 30
+  grid-gap: 80
 
   ocr: OCR Worker {
     class: card
@@ -68,7 +68,7 @@ extraction_zone: "Extraction Pipeline" {
 
 data_zone: "Data" {
   grid-columns: 2
-  grid-gap: 30
+  grid-gap: 80
 
   db: Postgres {
     class: card
@@ -82,7 +82,7 @@ data_zone: "Data" {
 
 integrations_zone: "3rd Party Integrations" {
   grid-columns: 2
-  grid-gap: 30
+  grid-gap: 80
 
   claude: Claude API {
     class: card
@@ -94,14 +94,14 @@ integrations_zone: "3rd Party Integrations" {
   }
 }
 
-cpa -> app_zone.web: "1. Upload return"
-app_zone.web -> app_zone.api: "2. POST /returns"
+# Pure L-to-R flow. No backward arrows.
+cpa -> app_zone.web: "1. Upload"
+app_zone.web -> app_zone.api: "2. POST"
 app_zone.api -> extraction_zone.ocr: "3. Enqueue"
 extraction_zone.ocr -> extraction_zone.extractor: "4. OCR text"
-extraction_zone.extractor -> integrations_zone.claude: "5. Extract fields" {
+extraction_zone.extractor -> extraction_zone.review: "5. Low-confidence"
+extraction_zone -> data_zone: "6. Persist verified"
+data_zone -> integrations_zone.target: "7. Export"
+extraction_zone.extractor -> integrations_zone.claude: "ext. LLM call" {
   style.stroke-dash: 3
 }
-extraction_zone.extractor -> extraction_zone.review: "6. Low-confidence"
-extraction_zone -> app_zone.api: "7. Verified"
-app_zone.api -> data_zone: "8. Persist"
-app_zone.api -> integrations_zone.target: "9. Export"
