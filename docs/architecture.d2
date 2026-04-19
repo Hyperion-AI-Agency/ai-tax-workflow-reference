@@ -1,5 +1,5 @@
 # AI Tax System - Architecture
-# Render: d2 --theme 0 --sketch --pad 120 --scale 1.5 --layout elk docs/architecture.d2 docs/architecture.svg
+# Render: d2 --theme 0 --sketch --pad 80 --scale 1.0 --layout elk docs/architecture.d2 docs/architecture.svg
 
 vars: {
   d2-config: {
@@ -8,6 +8,8 @@ vars: {
 }
 
 direction: right
+grid-columns: 3
+grid-gap: 60
 
 classes: {
   card: {
@@ -40,7 +42,8 @@ client_zone: "Client" {
 }
 
 backend_zone: "Extraction Pipeline" {
-  direction: down
+  grid-columns: 2
+  grid-gap: 40
 
   api: FastAPI Gateway {
     class: card
@@ -61,7 +64,8 @@ backend_zone: "Extraction Pipeline" {
 }
 
 data_zone: "Data" {
-  direction: down
+  grid-columns: 2
+  grid-gap: 40
 
   db: Postgres {
     class: card
@@ -80,14 +84,13 @@ external_zone: "Target Systems" {
   }
 }
 
-# All writes funnel through api (no direct claude/review -> db arrows,
-# which previously overlapped the api card).
+# All writes funnel through api (no direct claude/review -> db arrows).
 cpa -> client_zone.web: "1. Upload return"
 client_zone.web -> backend_zone.api: "2. POST /returns"
 backend_zone.api -> data_zone.storage: "3. Store encrypted"
 backend_zone.api -> backend_zone.ocr: "4. Enqueue OCR"
 backend_zone.ocr -> backend_zone.claude: "5. Extract fields"
-backend_zone.claude -> backend_zone.review: "6. Low-confidence fields"
+backend_zone.claude -> backend_zone.review: "6. Low-confidence"
 backend_zone.review -> backend_zone.api: "7. CPA-approved"
 backend_zone.api -> data_zone.db: "8. Persist verified"
 backend_zone.api -> external_zone.target: "9. Export"
